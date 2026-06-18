@@ -13,6 +13,19 @@ $stmt = $conn->prepare(
  ORDER BY booking_date DESC"
 );
 
+$stmt = $conn->prepare(
+"SELECT
+ bookings.*,
+ users.name AS barber_name,
+ services.name AS service_name,
+ services.price
+ FROM bookings
+ JOIN users ON bookings.barber_id = users.id
+ JOIN services ON bookings.service_id = services.id
+ WHERE client_id=?
+ ORDER BY booking_date DESC"
+);
+
 $stmt->bind_param("i", $client_id);
 $stmt->execute();
 

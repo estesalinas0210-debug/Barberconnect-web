@@ -39,6 +39,11 @@ if ($_SESSION['user']['role'] != 'client') {
     <h2>Reservar turno</h2>
 
     <select id="barber"></select>
+    <h3>Servicio</h3>
+
+    <select id="service"></select>
+
+    <div id="serviceInfo"></div>
     <div id="barberProfile"></div>
 
     <div id="horarios"></div>
@@ -47,12 +52,60 @@ if ($_SESSION['user']['role'] != 'client') {
   <input type="hidden" id="date">
     <button class="btn-primary" onclick="crearReserva()">Confirmar</button>
   </div>
-  <div class="card2">
-    <h2>Mis reservas</h2>
-  <div id="reservas"></div>
+
 </div>
 
 <script>
+function cargarServicios() {
+
+    fetch("../api/get_services.php")
+    .then(res => res.json())
+    .then(data => {
+
+        let html = "";
+
+        data.forEach(service => {
+
+            html += `
+            <option value="${service.id}"
+                    data-price="${service.price}"
+                    data-duration="${service.duration}">
+                ${service.name}
+            </option>
+            `;
+
+        });
+
+        document.getElementById("service").innerHTML = html;
+        document.getElementById("service")
+        .addEventListener(
+            "change",
+            mostrarServicio
+);
+
+        mostrarServicio();
+
+    });
+
+}
+
+function mostrarServicio() {
+
+    const select =
+    document.getElementById("service");
+
+    const option =
+    select.options[select.selectedIndex];
+
+    document.getElementById(
+      "serviceInfo"
+    ).innerHTML = `
+        <p>💰 Precio: $${option.dataset.price}</p>
+        <p>⏱ Duración: ${option.dataset.duration} min</p>
+    `;
+
+}
+
 cargarReservas();
 
 setInterval(() => {
@@ -83,6 +136,11 @@ function crearReserva() {
   }
 
   const fd = new FormData();
+
+  fd.append(
+    "service_id",
+    document.getElementById("service").value
+);
 
   fd.append(
       "barber_id",
@@ -130,7 +188,6 @@ function cargarReservas() {
           </span>
         </div>`;
       });
-      document.getElementById("reservas").innerHTML = html;
     });
 }
 
@@ -153,11 +210,11 @@ function cargarHorarios() {
         for(let h=9; h<18; h++){
 
         horarios.push(
-        ${String(h).padStart(2,'0')}:00:00
+        `${String(h).padStart(2,'0')}:00:00`
         );
 
         horarios.push(
-        ${String(h).padStart(2,'0')}:30:00
+        `${String(h).padStart(2,'0')}:30:00`
         );
 
 }
@@ -219,7 +276,7 @@ function logout() {
 
 cargarBarberos();
 cargarReservas();
-
+cargarServicios();
 document.addEventListener('DOMContentLoaded', function () {
 
     const calendarEl = document.getElementById('calendar');

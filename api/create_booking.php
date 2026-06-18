@@ -35,16 +35,25 @@ if($check_result->num_rows > 0){
 
 $stmt = $conn->prepare(
     "INSERT INTO bookings
-    (client_id, barber_id, booking_date, booking_time)
-    VALUES (?,?,?,?)"
+(
+ client_id,
+ barber_id,
+ service_id,
+ booking_date,
+ booking_time
+)
+VALUES (?,?,?,?,?)"
 );
 
+$service_id = $_POST['service_id'];
+
 $stmt->bind_param(
-    "iiss",
-    $client_id,
-    $barber_id,
-    $date,
-    $time
+"iiiss",
+$client_id,
+$barber_id,
+$service_id,
+$date,
+$time
 );
 
 if($stmt->execute()){
