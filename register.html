@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Crear cuenta - Barberconnect</title>
+</head>
+<body>
+<link rel="stylesheet" href="assets/css/register.css">
+<div class="container">
+
+  <div class="login-card">
+
+    <h1>💈 Crear cuenta</h1>
+    <p>Únete a BarberApp</p>
+
+    <input type="text" id="name" placeholder="Nombre">
+    <input type="email" id="email" placeholder="Correo">
+    <input type="password" id="password" placeholder="Contraseña">
+    <input type="password" id="confirmPassword" placeholder="Confirmar contraseña">
+
+    <select id="role" class="role-select">
+      <option value="client">Cliente</option>
+      <option value="barber">Barbero</option>
+    </select>
+
+    <button onclick="register()">Registrarse</button>
+    <div id="message" class="message"></div>
+
+    <p class="register">
+      ¿Ya tienes cuenta? <a href="login.html">Iniciar sesión</a>
+    </p>
+
+  </div>
+
+</div>
+
+<script src="assets/js/register.js"></script>
+</body>
+</html>
