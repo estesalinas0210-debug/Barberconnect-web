@@ -1,18 +1,15 @@
 <?php
 
+session_start();
 include("../config/db.php");
 
-$barber_id = $_GET['barber_id'];
+$barber_id = $_SESSION['user']['id'];
 
 $stmt = $conn->prepare(
 "
-SELECT
-users.name,
-barber_profiles.*
+SELECT *
 FROM barber_profiles
-JOIN users
-ON barber_profiles.barber_id = users.id
-WHERE barber_id = ?
+WHERE barber_id=?
 "
 );
 

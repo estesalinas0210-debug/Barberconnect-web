@@ -53,9 +53,75 @@ if ($_SESSION['user']['role'] != 'client') {
     <button class="btn-primary" onclick="crearReserva()">Confirmar</button>
   </div>
 
+  <div class="card">
+    <h2>Mis reservas</h2>
+    <div id="reservas"></div>
+</div>
+
 </div>
 
 <script>
+function cargarPerfilBarbero() {
+
+    const barberId =
+    document.getElementById("barber").value;
+
+    if(!barberId) return;
+
+    fetch(
+      `../api/get_barber_profile.php?barber_id=${barberId}`
+    )
+    .then(res => res.json())
+    .then(barber => {
+
+        if(!barber){
+            document.getElementById("barberProfile").innerHTML =
+            "<p>Perfil no disponible</p>";
+            return;
+        }
+
+        const foto =
+        barber.photo
+        ? `../${barber.photo}`
+        : "../assets/img/default-user.png";
+
+        document.getElementById(
+          "barberProfile"
+        ).innerHTML = `
+
+        <div class="barber-card">
+
+            <img
+            src="${foto}"
+            class="barber-photo"
+            alt="${barber.name}"
+            >
+
+            <h3>${barber.name}</h3>
+
+            <p>${barber.bio || ""}</p>
+
+            <p>
+              ✂️ Especialidad:
+              ${barber.specialty || "No especificada"}
+            </p>
+
+            <p>
+              ⭐ ${barber.experience || 0}
+              años de experiencia
+            </p>
+
+        </div>
+
+        `;
+
+    })
+    .catch(error => {
+        console.error(error);
+    });
+
+}
+
 function cargarServicios() {
 
     fetch("../api/get_services.php")
@@ -111,6 +177,7 @@ cargarReservas();
 setInterval(() => {
   cargarReservas();
 }, 5000);
+
 function cargarBarberos() {
   fetch("../api/get_barbers.php")
     .then(res => res.json())
@@ -120,6 +187,27 @@ function cargarBarberos() {
         html += `<option value="${b.id}">${b.name}</option>`;
       });
       document.getElementById("barber").innerHTML = html;
+
+        cargarPerfilBarbero();
+
+        document
+        .getElementById("barber")
+        .addEventListener(
+            "change",
+            cargarPerfilBarbero
+        );
+        document.getElementById("barber").innerHTML = html;
+
+    cargarPerfilBarbero();
+
+    document
+    .getElementById("barber")
+    .addEventListener("change", () => {
+
+        cargarPerfilBarbero();
+        cargarHorarios();
+
+    });
     });
 }
 
@@ -177,18 +265,93 @@ function cargarReservas() {
   fetch("../api/get_my_bookings.php")
     .then(res => res.json())
     .then(data => {
-      let html = "";
-      data.forEach(b => {
-        html += `
-        <div class="card">
-          <p><b>${b.barber_name}</b></p>
-          <p>${b.booking_date} - ${b.booking_time}</p>
-          <span class="status ${b.status}">
-            ${b.status}
-          </span>
-        </div>`;
-      });
+
+      html += `
+<div class="card">
+
+  <p><b>${b.client_name}</b></p>
+
+  <p>${b.booking_date} - ${b.booking_time}</p>
+
+    <span class="status ${b.status}">
+  ${
+    b.status === "pending"
+      ? "⏳ Pendiente"
+      : b.status === "accepted"
+      ? "✅ Aceptada"
+      : b.status === "rejected"
+      ? "❌ Rechazada"
+      : b.status === "cancelled"
+      ? "🚫 Cancelada"
+      : b.status
+  }
+</span>
+
+  ${b.status === 'cancelled'
+    ? '<p style="color:red;"><b>❌ Cancelada por el cliente</b></p>'
+    : ''
+  }
+
+  ${b.status === 'pending' ? `
+      <button
+      class="btn-success"
+      onclick="update(${b.id}, 'accepted')">
+      Aceptar
+      </button>
+
+      <button
+      class="btn-danger"
+      onclick="update(${b.id}, 'rejected')">
+      Rechazar
+      </button>
+  ` : ''}
+
+</div>
+`;
+
+      document.getElementById("reservas").innerHTML = html;
+
     });
+}
+
+function cancelarReserva(id){
+
+    if(
+      !confirm(
+        "¿Deseas cancelar esta reserva?"
+      )
+    ){
+        return;
+    }
+
+    const fd = new FormData();
+
+    fd.append("id", id);
+
+    fetch(
+      "../api/cancel_booking.php",
+      {
+        method:"POST",
+        body:fd
+      }
+    )
+    .then(res => res.json())
+    .then(data => {
+
+        if(data.status === "success"){
+
+            alert(
+              "Reserva cancelada"
+            );
+
+            cargarReservas();
+
+            cargarHorarios();
+
+        }
+
+    });
+
 }
 
 function cargarHorarios() {

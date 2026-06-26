@@ -35,7 +35,151 @@
 
 </div>
 
+<div class="card">
+
+  <h2>Mi Perfil</h2>
+  <h3>Foto de Perfil</h3>
+  <input
+    type="file"
+    id="photo"
+    accept="image/*"
+  >
+  <img
+    id="preview"
+    class="barber-photo"
+    style="display:none;"
+  >
+  <h3>Biografía</h3>
+  <textarea
+    id="bio"
+    placeholder="Describe tu experiencia"
+  ></textarea>
+  <h3>Especialidad</h3>
+  <input
+    type="text"
+    id="specialty"
+    placeholder="Especialidad"
+  >
+  <h3>Experiencia</h3>
+  <input
+    type="number"
+    id="experience"
+    placeholder="Años de experiencia"
+  >
+
+  <button
+    class="btn-primary"
+    onclick="guardarPerfil()"
+  >
+    Guardar Perfil
+  </button>
+
+</div>
+
 <script>
+
+function cargarPerfil() {
+
+    fetch("../api/get_my_profile.php")
+    .then(res => res.json())
+    .then(profile => {
+
+        if(!profile) return;
+
+        if(profile.photo){
+
+    const preview =
+    document.getElementById("preview");
+
+    preview.src = "../" + profile.photo;
+    preview.style.display = "block";
+
+}
+
+        document.getElementById("bio").value =
+            profile.bio || "";
+
+        document.getElementById("specialty").value =
+            profile.specialty || "";
+
+        document.getElementById("experience").value =
+            profile.experience || "";
+
+    });
+
+}
+
+function guardarPerfil() {
+
+    const fd = new FormData();
+
+    const file =
+    document.getElementById("photo").files[0];
+
+    if(file){
+        fd.append("photo", file);
+    }
+
+    fd.append(
+      "bio",
+      document.getElementById("bio").value
+    );
+
+    fd.append(
+      "specialty",
+      document.getElementById("specialty").value
+    );
+
+    fd.append(
+      "experience",
+      document.getElementById("experience").value
+    );
+
+    fetch(
+      "../api/save_profile.php",
+      {
+        method:"POST",
+        body:fd
+      }
+    )
+    .then(res => res.json())
+    .then(data => {
+
+    if(data.status === "success"){
+
+        alert(data.message);
+
+        cargarPerfilBarbero();
+
+    }else{
+
+        alert("Error al guardar el perfil");
+
+    }
+
+});
+
+}
+
+document
+.getElementById("photo")
+.addEventListener("change", function(){
+
+    const file = this.files[0];
+
+    if(!file) return;
+
+    const preview =
+    document.getElementById("preview");
+
+    preview.src =
+    URL.createObjectURL(file);
+
+    preview.style.display =
+    "block";
+
+});
+
 function cargarReservas() {
   fetch("../api/get_bookings.php")
     .then(res => res.json())
@@ -111,7 +255,36 @@ function logout() {
   });
 }
 
+document
+.getElementById("photo")
+.addEventListener("change", function(){
+
+    const file =
+    this.files[0];
+
+    if(!file) return;
+
+    const reader =
+    new FileReader();
+
+    reader.onload = function(e){
+
+        const preview =
+        document.getElementById(
+          "preview"
+        );
+
+        preview.src = e.target.result;
+        preview.style.display = "block";
+
+    }
+
+    reader.readAsDataURL(file);
+
+});
+
 cargarReservas();
+cargarPerfil();
 </script>
 
 </body>

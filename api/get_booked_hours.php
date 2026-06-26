@@ -10,7 +10,7 @@ $stmt = $conn->prepare(
  FROM bookings
  WHERE barber_id=?
  AND booking_date=?
- AND status!='rejected'"
+ AND status NOT IN ('rejected','cancelled')"
 );
 
 $stmt->bind_param(
