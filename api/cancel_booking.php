@@ -42,3 +42,38 @@ SET
 WHERE id=?
 "
 );
+
+createNotification(
+    $conn,
+    $client_id,
+    "🚫 Reserva cancelada correctamente"
+);
+
+$get = $conn->prepare(
+"
+SELECT barber_id
+FROM bookings
+WHERE id=?
+"
+);
+
+$get->bind_param("i",$booking_id);
+$get->execute();
+
+$row =
+$get->get_result()->fetch_assoc();
+
+$barber_id =
+$row['barber_id'];
+
+createNotification(
+    $conn,
+    $barber_id,
+    "❌ Un cliente canceló una reserva"
+);
+
+createNotification(
+    $conn,
+    $barber_id,
+    "🔄 Un cliente cambió la fecha de su reserva"
+);

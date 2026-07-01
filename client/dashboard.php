@@ -29,8 +29,46 @@ if ($_SESSION['user']['role'] != 'client') {
 <link rel="stylesheet" href="../assets/css/style.css">
 
 <div class="navbar">
-  <div class="logo">💈 Barberconnect</div>
-  <button class="btn-danger" onclick="logout()">Salir</button>
+
+  <div class="logo">
+    💈 BarberConnect
+  </div>
+
+  <div class="notification-wrapper">
+
+      <button
+        class="bell-btn"
+        onclick="toggleNotifications()"
+      >
+        🔔
+        <span id="notificationCount">
+          0
+        </span>
+      </button>
+
+  </div>
+
+  <button
+    class="btn-danger"
+    onclick="logout()"
+  >
+    Salir
+  </button>
+
+</div>
+
+<div
+  id="notificationPanel"
+  class="notification-panel"
+  style="display:none;"
+>
+
+    <h3>Notificaciones</h3>
+
+    <div id="notifications"></div>
+
+</div>
+
 </div>
 
 <div class="container fade">
@@ -61,6 +99,84 @@ if ($_SESSION['user']['role'] != 'client') {
 </div>
 
 <script>
+
+function cargarNotificaciones(){
+
+    fetch(
+      "../api/get_notifications.php"
+    )
+    .then(res => res.json())
+    .then(data => {
+
+        let html = "";
+
+        let unread = 0;
+
+        data.forEach(n => {
+
+            if(n.is_read == 0){
+                unread++;
+            }
+
+            html += `
+            <div class="
+                notification-item
+                ${n.is_read == 0 ? 'unread' : ''}
+            ">
+
+                ${n.message}
+
+                <br>
+
+                <small>
+                  ${n.created_at}
+                </small>
+
+            </div>
+            `;
+
+        });
+
+        document
+        .getElementById("notifications")
+        .innerHTML = html;
+
+        document
+        .getElementById("notificationCount")
+        .innerText = unread;
+
+    });
+
+}
+
+function toggleNotifications(){
+
+    const panel =
+    document.getElementById(
+      "notificationPanel"
+    );
+
+    if(panel.style.display === "none"){
+
+        panel.style.display = "block";
+
+        fetch(
+          "../api/read_notifications.php"
+        )
+        .then(() => {
+
+            cargarNotificaciones();
+
+        });
+
+    }else{
+
+        panel.style.display = "none";
+
+    }
+
+}
+
 function cargarPerfilBarbero() {
 
     const barberId =
@@ -470,6 +586,15 @@ document.addEventListener('DOMContentLoaded', function () {
     calendar.render();
 
 });
+
+cargarNotificaciones();
+
+setInterval(() => {
+
+    cargarNotificaciones();
+
+}, 5000);
+
 </script>
 
 </div>

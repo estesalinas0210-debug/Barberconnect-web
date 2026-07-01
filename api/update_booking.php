@@ -41,3 +41,42 @@ if ($stmt->execute()) {
     ]);
 
 }
+
+require_once("create_notification.php");
+
+$get = $conn->prepare(
+"
+SELECT client_id
+FROM bookings
+WHERE id=?
+"
+);
+
+$get->bind_param("i",$id);
+$get->execute();
+
+$booking =
+$get->get_result()->fetch_assoc();
+
+$client_id =
+$booking['client_id'];
+
+if($status == "accepted"){
+
+    createNotification(
+        $conn,
+        $client_id,
+        "✅ Tu reserva fue aceptada"
+    );
+
+}
+
+if($status == "rejected"){
+
+    createNotification(
+        $conn,
+        $client_id,
+        "❌ Tu reserva fue rechazada"
+    );
+
+}

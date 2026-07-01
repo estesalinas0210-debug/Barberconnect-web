@@ -65,3 +65,18 @@ if($stmt->execute()){
         "status"=>"error"
     ]);
 }
+
+require_once("create_notification.php");
+
+createNotification(
+    $conn,
+    $client_id,
+    "📅 Reserva creada para el día $date a las $time"
+);
+
+createNotification(
+    $conn,
+    $barber_id,
+    "🔔 Nueva reserva recibida",
+    "dashboard.php#reservas"
+);
