@@ -1,29 +1,81 @@
 function login() {
-  
-  const formData = new FormData();
-  formData.append("email", document.getElementById("email").value);
-  formData.append("password", document.getElementById("password").value);
 
-  fetch("api/login.php", {
-    method: "POST",
-    body: formData
-  })
-  .then(res => res.json())
-  .then(data => {
-    console.log(data);
+    const email =
+        document.getElementById("email").value.trim();
 
-    if (data.status === "ok") {
-      if (data.role === "client") {
-        window.location.href = "client/dashboard.php";
-      } else {
-        window.location.href = "barber/dashboard.php";
-      }
-    } else {
-      alert("Credenciales incorrectas");
+    const password =
+        document.getElementById("password").value;
+
+
+    if (!email || !password) {
+
+        alert("Completa todos los campos");
+
+        return;
     }
-  })
-  .catch(error => {
-    console.error(error);
-  });
-  
+
+
+    const formData = new FormData();
+
+    formData.append("email", email);
+    formData.append("password", password);
+
+
+    fetch("api/login.php", {
+
+        method: "POST",
+        body: formData
+
+    })
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        console.log("Respuesta login:", data);
+
+
+        if (data.status === "ok") {
+
+            if (data.role === "admin") {
+
+                window.location.href =
+                    "admin/dashboard.php";
+
+
+            } else if (data.role === "barber") {
+
+                window.location.href =
+                    "barber/dashboard.php";
+
+
+            } else {
+
+                window.location.href =
+                    "client/dashboard.php";
+
+            }
+
+
+        } else {
+
+            alert(
+                data.message ||
+                "Correo o contraseña incorrectos"
+            );
+
+        }
+
+    })
+
+    .catch(error => {
+
+        console.error("Error login:", error);
+
+        alert(
+            "Ocurrió un error al iniciar sesión"
+        );
+
+    });
+
 }

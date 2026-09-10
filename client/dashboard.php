@@ -24,6 +24,7 @@ if ($_SESSION['user']['role'] != 'client') {
       <?php echo $_SESSION['user']['name']; ?>
   </h2>
 </head>
+<div id="toastContainer"></div>
 <body>
 <link rel="stylesheet" href="../assets/css/style.css">
 <link rel="stylesheet" href="../assets/css/style.css">
@@ -99,6 +100,32 @@ if ($_SESSION['user']['role'] != 'client') {
 </div>
 
 <script>
+
+function showToast(message,type="info"){
+
+    const toast=document.createElement("div");
+
+    toast.className=`toast ${type}`;
+
+    toast.innerHTML=message;
+
+    document
+    .getElementById("toastContainer")
+    .appendChild(toast);
+
+    setTimeout(()=>{
+
+        toast.classList.add("hide");
+
+        setTimeout(()=>{
+
+            toast.remove();
+
+        },300);
+
+    },3500);
+
+}
 
 function cargarNotificaciones(){
 

@@ -79,7 +79,10 @@ function cargarHorarios() {
 //funcion para crear reserva
 function crearReserva() {
   if (!selectedDate || !selectedHour) {
-    alert("Selecciona fecha y hora");
+   showToast(
+"⚠ Debes seleccionar una fecha",
+"warning"
+);
     return;
   }
 
@@ -92,7 +95,10 @@ function crearReserva() {
     method: "POST",
     body: fd
   }).then(() => {
-    alert("Reserva confirmada");
+    showToast(
+"✅ Reserva creada correctamente",
+"success"
+);
     cargarHorarios();
   });
 }

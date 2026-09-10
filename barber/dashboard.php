@@ -17,6 +17,7 @@
       <?php echo $_SESSION['user']['name']; ?>
   </h2>
 </head>
+<div id="toastContainer"></div>
 <body>
 
 <link rel="stylesheet" href="../assets/css/style.css">
@@ -114,25 +115,117 @@
 
 <script>
 
+function showToast(message,type="info"){
+
+    const toast=document.createElement("div");
+
+    toast.className=`toast ${type}`;
+
+    toast.innerHTML=message;
+
+    document
+    .getElementById("toastContainer")
+    .appendChild(toast);
+
+    setTimeout(()=>{
+
+        toast.classList.add("hide");
+
+        setTimeout(()=>{
+
+            toast.remove();
+
+        },300);
+
+    },3500);
+
+}
+
+const notificationSound =
+new Audio("../assets/sounds/notification.mp3");
+
+notificationSound.volume = 0.6;
+
+let ultimoId = 0;
+let primeraCarga = true;
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    if (Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+
+    cargarNotificaciones();
+
+    setInterval(() => {
+        cargarNotificaciones();
+    }, 3000);
+
+});
+
 function cargarNotificaciones(){
 
     fetch("../api/get_notifications.php")
     .then(res => res.json())
     .then(data => {
 
-        const cantidadActual = data.length;
-
-        if(
-            ultimaCantidad > 0 &&
-            cantidadActual > ultimaCantidad
-        ){
-            notificationSound.play();
-        }
-
-        ultimaCantidad = cantidadActual;
-
         let html = "";
         let unread = 0;
+
+        if(data.length > 0){
+
+            const nuevoId = parseInt(data[0].id);
+
+            if(!primeraCarga && nuevoId > ultimoId){
+
+                // 🔊 Sonido
+                notificationSound.play().catch(()=>{});
+
+                // 🔔 Animar campana
+                const bell =
+                document.querySelector(".bell-btn");
+
+                if(bell){
+
+                    bell.classList.add("bell-ring");
+
+                    setTimeout(()=>{
+                        bell.classList.remove("bell-ring");
+                    },700);
+
+                }
+
+                // 🏷 Cambiar título
+                document.title = "🔔 Nueva notificación";
+
+                // 💻 Notificación del navegador
+                if(Notification.permission === "granted"){
+
+                    const n = new Notification(
+                        "💈 BarberConnect",
+                        {
+                            body:data[0].message,
+                            icon:"../assets/images/logo.png"
+                        }
+                    );
+
+                    n.onclick = () => {
+
+                        window.focus();
+
+                        document.title = "BarberConnect";
+
+                    };
+
+                }
+
+            }
+
+            ultimoId = nuevoId;
+
+        }
+
+        primeraCarga = false;
 
         data.forEach(n => {
 
@@ -141,23 +234,18 @@ function cargarNotificaciones(){
             }
 
             html += `
-            <div class="
-                notification-item
-                ${n.is_read == 0 ? 'unread' : ''}
-            ">
+            <div class="notification-item ${n.is_read==0?'unread':''}">
                 ${n.message}
+                <br>
+                <small>${n.created_at}</small>
             </div>
             `;
 
         });
 
-        document.getElementById(
-          "notifications"
-        ).innerHTML = html;
+        document.getElementById("notifications").innerHTML = html;
 
-        document.getElementById(
-          "notificationCount"
-        ).innerText = unread;
+        document.getElementById("notificationCount").innerText = unread;
 
     });
 
@@ -166,26 +254,24 @@ function cargarNotificaciones(){
 function toggleNotifications(){
 
     const panel =
-    document.getElementById(
-      "notificationPanel"
-    );
+    document.getElementById("notificationPanel");
 
-    if(panel.style.display === "none"){
+    if(panel.style.display=="none" || panel.style.display==""){
 
-        panel.style.display = "block";
+        panel.style.display="block";
 
-        fetch(
-          "../api/read_notifications.php"
-        )
-        .then(() => {
+        fetch("../api/read_notifications.php")
+        .then(()=>{
 
             cargarNotificaciones();
+
+            document.title="BarberConnect";
 
         });
 
     }else{
 
-        panel.style.display = "none";
+        panel.style.display="none";
 
     }
 
