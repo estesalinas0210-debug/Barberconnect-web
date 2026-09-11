@@ -448,6 +448,51 @@ function update(id, status) {
 
 }
 
+// ==========================================
+// MONITOR DE SESIÓN
+// ==========================================
+
+let sesionActiva = true;
+
+function comprobarSesion() {
+
+    if (!sesionActiva) return;
+
+    fetch("../api/check_session.php", {
+        method: "GET",
+        cache: "no-store"
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.status !== "success" && data.logout === true) {
+
+            sesionActiva = false;
+
+            alert(
+                data.message ||
+                "Tu sesión ha terminado."
+            );
+
+            window.location.href = "../login.html";
+
+        }
+
+    })
+    .catch(error => {
+
+        console.error(
+            "Error comprobando sesión:",
+            error
+        );
+
+    });
+}
+
+
+// Comprobar cada 10 segundos
+setInterval(comprobarSesion, 10000);
+
 function logout() {
   fetch("../api/logout.php").then(() => {
     window.location.href = "../login.html";

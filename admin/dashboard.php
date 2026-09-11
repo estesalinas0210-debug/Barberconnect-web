@@ -977,7 +977,9 @@ function cargarBarberos() {
             let data;
 
             try {
+
                 data = JSON.parse(texto);
+
             } catch (error) {
 
                 console.error(
@@ -1000,6 +1002,10 @@ function cargarBarberos() {
 
             const barberos = data.data || [];
 
+            // Guardamos los barberos para poder
+            // buscarlos posteriormente por ID
+            barberosData = barberos;
+
             console.log(
                 "✅ Barberos encontrados:",
                 barberos.length
@@ -1019,6 +1025,7 @@ function cargarBarberos() {
             );
 
         });
+
 }
 
 
@@ -1089,6 +1096,16 @@ function renderBarberos(barberos) {
                 onclick="verBarbero(${barbero.id})"
             >
                 Ver perfil
+            </button>
+
+            <button
+                class="${barbero.status === 'blocked' ? 'btn-primary' : 'btn-danger'}"
+                onclick="cambiarEstadoUsuario(
+                    ${barbero.id},
+                    '${barbero.status === 'blocked' ? 'active' : 'blocked'}'
+                )"
+            >
+                ${barbero.status === 'blocked' ? 'Activar' : 'Bloquear'}
             </button>
 
         </div>
@@ -1823,25 +1840,35 @@ function cerrarModalServicio() {
         .classList.remove("active");
 }
 
-const formServicio = document.getElementById("formServicio");
+document.addEventListener("DOMContentLoaded", function () {
 
-if (formServicio) {
+    const formServicio = document.getElementById("formServicio");
+
+    if (!formServicio) {
+        console.error("❌ No se encontró el formulario #formServicio");
+        return;
+    }
 
     formServicio.addEventListener("submit", function(e) {
 
         e.preventDefault();
 
-        const id =
-            document.getElementById("servicioId").value;
+        console.log("🟢 Formulario de servicio enviado");
 
-        const name =
-            document.getElementById("servicioNombre").value.trim();
+        const id = document.getElementById("servicioId").value.trim();
 
-        const price =
-            document.getElementById("servicioPrecio").value;
+        const name = document
+            .getElementById("servicioNombre")
+            .value
+            .trim();
 
-        const duration =
-            document.getElementById("servicioDuracion").value;
+        const price = document
+            .getElementById("servicioPrecio")
+            .value;
+
+        const duration = document
+            .getElementById("servicioDuracion")
+            .value;
 
         if (!name || !price || !duration) {
 
@@ -1863,13 +1890,19 @@ if (formServicio) {
 
         if (id) {
 
+            // EDITAR
             url = "../api/admin_update_service.php";
 
             formData.append("id", id);
 
+            console.log("✏️ Actualizando servicio:", id);
+
         } else {
 
+            // CREAR
             url = "../api/admin_create_service.php";
+
+            console.log("➕ Creando nuevo servicio");
 
         }
 
@@ -1878,16 +1911,43 @@ if (formServicio) {
             body: formData
         })
 
-        .then(response => response.json())
+        .then(response => {
 
-        .then(data => {
+            console.log("HTTP:", response.status);
 
-            console.log("Respuesta servicio:", data);
+            return response.text();
+
+        })
+
+        .then(text => {
+
+            console.log("Respuesta PHP:", text);
+
+            let data;
+
+            try {
+
+                data = JSON.parse(text);
+
+            } catch (error) {
+
+                console.error(
+                    "❌ PHP no devolvió JSON válido:",
+                    text
+                );
+
+                showToast(
+                    "El servidor devolvió una respuesta incorrecta",
+                    "error"
+                );
+
+                return;
+            }
 
             if (data.status === "success") {
 
                 showToast(
-                    data.message,
+                    data.message || "Servicio guardado correctamente",
                     "success"
                 );
 
@@ -1898,7 +1958,7 @@ if (formServicio) {
             } else {
 
                 showToast(
-                    data.message || "Error al guardar",
+                    data.message || "No se pudo guardar el servicio",
                     "error"
                 );
 
@@ -1909,12 +1969,12 @@ if (formServicio) {
         .catch(error => {
 
             console.error(
-                "Error guardando servicio:",
+                "❌ Error guardando servicio:",
                 error
             );
 
             showToast(
-                "Error al guardar el servicio",
+                "Error de conexión con el servidor",
                 "error"
             );
 
@@ -1922,7 +1982,7 @@ if (formServicio) {
 
     });
 
-}
+});
 
 function editarServicio(id) {
 

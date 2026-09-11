@@ -31,12 +31,10 @@ if ($_SESSION['user']['role'] !== 'admin') {
 
 $stmt = $conn->prepare(
     "SELECT
-
         users.id,
         users.name,
         users.email,
         users.status,
-
         barber_profiles.photo,
         barber_profiles.bio,
         barber_profiles.specialty,

@@ -6,12 +6,20 @@ header('Content-Type: application/json; charset=utf-8');
 
 include("../config/db.php");
 
-$email = $_POST['email'] ?? '';
+
+// =====================================================
+// DATOS DEL FORMULARIO
+// =====================================================
+
+$email = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
 
 
-// Validar datos
-if (empty($email) || empty($password)) {
+// =====================================================
+// VALIDAR CAMPOS
+// =====================================================
+
+if ($email === '' || $password === '') {
 
     echo json_encode([
         "status" => "error",
@@ -22,13 +30,26 @@ if (empty($email) || empty($password)) {
 }
 
 
-// Buscar usuario de forma segura
+// =====================================================
+// BUSCAR USUARIO
+// =====================================================
+
 $stmt = $conn->prepare(
     "SELECT *
      FROM users
      WHERE email = ?
      LIMIT 1"
 );
+
+if (!$stmt) {
+
+    echo json_encode([
+        "status" => "error",
+        "message" => "Error interno del servidor"
+    ]);
+
+    exit;
+}
 
 $stmt->bind_param("s", $email);
 
@@ -39,39 +60,88 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 
 
-if ($user && password_verify($password, $user['password'])) {
+// =====================================================
+// USUARIO NO EXISTE
+// =====================================================
 
-    // Crear sesión
-    $_SESSION['user'] = $user;
-
-
-    // Determinar destino
-    if ($user['role'] === 'admin') {
-
-        $redirect = 'admin/dashboard.php';
-
-    } elseif ($user['role'] === 'barber') {
-
-        $redirect = 'barber/dashboard.php';
-
-    } else {
-
-        $redirect = 'client/dashboard.php';
-
-    }
-
-
-    echo json_encode([
-        "status" => "ok",
-        "role" => $user['role'],
-        "redirect" => $redirect
-    ]);
-
-} else {
+if (!$user) {
 
     echo json_encode([
         "status" => "error",
         "message" => "Correo o contraseña incorrectos"
     ]);
 
+    exit;
 }
+
+
+// =====================================================
+// VERIFICAR CONTRASEÑA
+// =====================================================
+
+if (!password_verify($password, $user['password'])) {
+
+    echo json_encode([
+        "status" => "error",
+        "message" => "Correo o contraseña incorrectos"
+    ]);
+
+    exit;
+}
+
+
+// =====================================================
+// VERIFICAR ESTADO DE LA CUENTA
+// =====================================================
+
+if (
+    isset($user['status']) &&
+    $user['status'] === 'blocked'
+) {
+
+    echo json_encode([
+        "status" => "error",
+        "message" => "Tu cuenta está bloqueada. Contacta con la administración."
+    ]);
+
+    exit;
+}
+
+
+// =====================================================
+// CREAR SESIÓN
+// =====================================================
+
+$_SESSION['user'] = $user;
+
+
+// =====================================================
+// REDIRECCIÓN SEGÚN ROL
+// =====================================================
+
+if ($user['role'] === 'admin') {
+
+    $redirect = 'admin/dashboard.php';
+
+} elseif ($user['role'] === 'barber') {
+
+    $redirect = 'barber/dashboard.php';
+
+} else {
+
+    $redirect = 'client/dashboard.php';
+
+}
+
+
+// =====================================================
+// RESPUESTA
+// =====================================================
+
+echo json_encode([
+    "status" => "ok",
+    "role" => $user['role'],
+    "redirect" => $redirect
+]);
+
+?>
